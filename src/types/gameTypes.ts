@@ -1,6 +1,29 @@
 
 // Define player state types
-export type PlayerState = 'idle' | 'walking' | 'jumping' | 'attacking' | 'blocking' | 'hit' | 'knockedDown';
+export type PlayerState = 
+  | 'idle' 
+  | 'walking' 
+  | 'jumping' 
+  | 'attacking' 
+  | 'blocking' 
+  | 'hit' 
+  | 'knockedDown'
+  | 'walkingForward'
+  | 'walkingBackward'
+  | 'crouching'
+  | 'jumpingUp'
+  | 'jumpingForward'
+  | 'jumpingBackward'
+  | 'landing'
+  | 'lightAttack'
+  | 'mediumAttack'
+  | 'heavyAttack'
+  | 'specialAttack'
+  | 'blockingStand'
+  | 'blockingCrouch'
+  | 'hitStunStand'
+  | 'hitStunCrouch'
+  | 'gettingUp';
 
 // Define hitbox type
 export interface Hitbox {
@@ -16,6 +39,33 @@ export interface Hitbox {
 export interface Vector2D {
   x: number;
   y: number;
+}
+
+// Define character stats
+export interface CharacterStats {
+  name: string;
+  maxHealth: number;
+  walkSpeed: number;
+  jumpVelocity: Vector2D;
+  attackPower: {
+    light: number;
+    medium: number;
+    heavy: number;
+    special: number;
+  };
+}
+
+// Define player data
+export interface PlayerData {
+  id: 'P1' | 'P2';
+  characterName: string;
+  stats: CharacterStats;
+  position: Vector2D;
+  velocity: Vector2D;
+  health: number;
+  state: PlayerState;
+  isFacingRight: boolean;
+  activeHitboxes: Hitbox[];
 }
 
 // Define game state interface
@@ -34,6 +84,8 @@ export interface GameState {
   isPaused: boolean;
   matchOver: boolean;
   winner: "P1" | "P2" | "Draw" | null;
+  player1Data?: PlayerData;
+  player2Data?: PlayerData;
 }
 
 // Define game action types
@@ -65,6 +117,45 @@ export const characterNames: Record<string, string> = {
   future: "FUTURE",
   meg: "MEG",
   nicki: "NICKI",
+};
+
+// Character stats
+export const characterStats: Record<string, CharacterStats> = {
+  drake: {
+    name: "DRAKE",
+    maxHealth: 100,
+    walkSpeed: 5,
+    jumpVelocity: { x: 0, y: -10 },
+    attackPower: { light: 5, medium: 10, heavy: 15, special: 20 }
+  },
+  kendrick: {
+    name: "KENDRICK",
+    maxHealth: 90,
+    walkSpeed: 6,
+    jumpVelocity: { x: 0, y: -11 },
+    attackPower: { light: 6, medium: 12, heavy: 14, special: 18 }
+  },
+  future: {
+    name: "FUTURE",
+    maxHealth: 95,
+    walkSpeed: 5.5,
+    jumpVelocity: { x: 0, y: -10.5 },
+    attackPower: { light: 5, medium: 11, heavy: 15, special: 19 }
+  },
+  meg: {
+    name: "MEG",
+    maxHealth: 85,
+    walkSpeed: 7,
+    jumpVelocity: { x: 0, y: -12 },
+    attackPower: { light: 7, medium: 9, heavy: 13, special: 21 }
+  },
+  nicki: {
+    name: "NICKI",
+    maxHealth: 80,
+    walkSpeed: 8,
+    jumpVelocity: { x: 0, y: -12.5 },
+    attackPower: { light: 8, medium: 10, heavy: 12, special: 22 }
+  }
 };
 
 export const stageBgs: Record<string, string> = {

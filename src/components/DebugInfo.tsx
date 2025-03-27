@@ -1,24 +1,46 @@
 
 import React from 'react';
-import { GameState } from '@/types/gameTypes';
+import { GameState, characterStats } from '@/types/gameTypes';
 
 interface DebugInfoProps {
   gameState: GameState;
 }
 
 const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
-  const { player1State, player1Pos, player1Health, player2State, player2Pos, player2Health, gameTimer } = gameState;
+  const { 
+    player1State, player1Pos, player1Health, player1Velocity,
+    player2State, player2Pos, player2Health, player2Velocity,
+    gameTimer, isPaused
+  } = gameState;
   
   return (
-    <div className="absolute bottom-4 left-4 bg-black/70 p-2 text-white text-xs font-mono">
-      <div>P1 State: {player1State}</div>
-      <div>P1 Pos: {Math.round(player1Pos.x)}, {Math.round(player1Pos.y)}</div>
-      <div>P1 Health: {player1Health}</div>
-      <div>P2 State: {player2State}</div>
-      <div>P2 Pos: {Math.round(player2Pos.x)}, {Math.round(player2Pos.y)}</div>
-      <div>P2 Health: {player2Health}</div>
-      <div>Timer: {Math.ceil(gameTimer)}</div>
-      <div>Controls: WASD + U,I,O (P1) / Arrows + 1,2,3 (P2)</div>
+    <div className="absolute bottom-4 left-4 bg-black/70 p-2 text-white text-xs font-mono max-h-80 overflow-y-auto">
+      <div className="mb-2 border-b border-white/50 pb-1">
+        <span className="text-arcade-accent">Game Status:</span> {isPaused ? 'PAUSED' : 'RUNNING'} | <span>Timer: {Math.ceil(gameTimer)}</span>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <h3 className="text-arcade-accent border-b border-arcade-accent/50 mb-1">PLAYER 1</h3>
+          <div>State: {player1State}</div>
+          <div>Position: {Math.round(player1Pos.x)}, {Math.round(player1Pos.y)}</div>
+          <div>Velocity: {Math.round(player1Velocity.x)}, {Math.round(player1Velocity.y)}</div>
+          <div>Health: {player1Health}</div>
+        </div>
+        
+        <div>
+          <h3 className="text-arcade-purple border-b border-arcade-purple/50 mb-1">PLAYER 2</h3>
+          <div>State: {player2State}</div>
+          <div>Position: {Math.round(player2Pos.x)}, {Math.round(player2Pos.y)}</div>
+          <div>Velocity: {Math.round(player2Velocity.x)}, {Math.round(player2Velocity.y)}</div>
+          <div>Health: {player2Health}</div>
+        </div>
+      </div>
+      
+      <div className="mt-2 pt-1 border-t border-white/50">
+        <div>Controls: WASD + U,I,O (P1) / Arrows + 1,2,3 (P2)</div>
+        <div className="text-yellow-300 text-[10px] mt-1">Press ESC to pause/unpause</div>
+      </div>
     </div>
   );
 };
