@@ -4,13 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, ArrowLeft } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
 
 // Fighter data
 const fighters = [
@@ -47,6 +41,10 @@ const CharacterSelect = () => {
         setP1Index((prev) => (prev < fighters.length - 1 ? prev + 1 : 0));
       } else if (e.key === "g" || e.key === "G") {
         setP1Fighter(fighters[p1Index].id);
+        toast({
+          title: "Player 1 Selected",
+          description: `${fighters[p1Index].name} selected as Player 1`,
+        });
       }
 
       // P2 Controls (Arrow keys + NumPad 1)
@@ -56,6 +54,10 @@ const CharacterSelect = () => {
         setP2Index((prev) => (prev < fighters.length - 1 ? prev + 1 : 0));
       } else if (e.key === "1" || e.key === "NumPad1") {
         setP2Fighter(fighters[p2Index].id);
+        toast({
+          title: "Player 2 Selected",
+          description: `${fighters[p2Index].name} selected as Player 2`,
+        });
       }
 
       // Background controls
@@ -65,12 +67,21 @@ const CharacterSelect = () => {
         setStageIndex((prev) => (prev < stages.length - 1 ? prev + 1 : 0));
       } else if (e.key === "/") {
         setSelectedStage(stages[stageIndex].id);
+        toast({
+          title: "Stage Selected",
+          description: `${stages[stageIndex].name} selected as fighting stage`,
+        });
+      }
+      
+      // Start fight with Enter key if all selections are made
+      if (e.key === "Enter" && p1Fighter && p2Fighter && selectedStage) {
+        handleStartFight();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [p1Index, p2Index, stageIndex]);
+  }, [p1Index, p2Index, stageIndex, p1Fighter, p2Fighter, selectedStage]);
 
   // Get the actual fighter objects
   const p1Selected = fighters.find((f) => f.id === p1Fighter);
@@ -84,13 +95,24 @@ const CharacterSelect = () => {
   const handleStartFight = () => {
     if (allSelected) {
       // Navigate to fight page with selected characters and stage
-      // You might want to use state management or URL parameters here
       navigate("/fight", { 
         state: { 
           p1: p1Fighter, 
           p2: p2Fighter, 
           stage: selectedStage 
         } 
+      });
+    } else {
+      // Show what's missing
+      const missing = [];
+      if (!p1Fighter) missing.push("Player 1");
+      if (!p2Fighter) missing.push("Player 2");
+      if (!selectedStage) missing.push("Stage");
+      
+      toast({
+        title: "Selection incomplete",
+        description: `Please select: ${missing.join(", ")}`,
+        variant: "destructive",
       });
     }
   };
@@ -106,10 +128,10 @@ const CharacterSelect = () => {
       <div className="relative z-10 w-full flex flex-col md:flex-row items-center justify-around gap-4 flex-grow">
         {/* P1 Selection */}
         <div className="w-full md:w-1/3 flex flex-col items-center">
-          <h2 className="font-pixel text-xl text-arcade-accent mb-2">PLAYER 1</h2>
+          <h2 className="font-pixel text-xl text-red-500 mb-2">PLAYER 1</h2>
           
           {/* Selected fighter display */}
-          <Card className="w-48 h-48 bg-arcade-dark border-2 border-arcade-accent mb-4 relative overflow-hidden">
+          <Card className="w-48 h-48 bg-arcade-dark border-2 border-red-500 mb-4 relative overflow-hidden">
             {p1Selected ? (
               <div className="flex flex-col items-center h-full">
                 <img 
@@ -121,10 +143,10 @@ const CharacterSelect = () => {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="font-pixel text-arcade-accent text-center">SELECT<br/>FIGHTER</p>
+                <p className="font-pixel text-red-500 text-center">SELECT<br/>FIGHTER</p>
               </div>
             )}
-            <div className="absolute top-0 right-0 bg-arcade-accent text-black font-pixel text-xs px-2 py-1">
+            <div className="absolute top-0 right-0 bg-red-500 text-black font-pixel text-xs px-2 py-1">
               P1
             </div>
           </Card>
@@ -139,11 +161,17 @@ const CharacterSelect = () => {
             </Button>
             
             <Card 
-              onClick={() => setP1Fighter(fighters[p1Index].id)}
+              onClick={() => {
+                setP1Fighter(fighters[p1Index].id);
+                toast({
+                  title: "Player 1 Selected",
+                  description: `${fighters[p1Index].name} selected as Player 1`,
+                });
+              }}
               className={`w-20 h-20 bg-arcade-dark border-2 cursor-pointer transition-all duration-300 ${
                 p1Fighter === fighters[p1Index].id 
                   ? "border-arcade-neon shadow-[0_0_10px_#39FF14]" 
-                  : "border-arcade-accent hover:border-arcade-neon"
+                  : "border-red-500 hover:border-arcade-neon"
               }`}
             >
               <img 
@@ -166,10 +194,10 @@ const CharacterSelect = () => {
 
         {/* P2 Selection */}
         <div className="w-full md:w-1/3 flex flex-col items-center">
-          <h2 className="font-pixel text-xl text-arcade-purple mb-2">PLAYER 2</h2>
+          <h2 className="font-pixel text-xl text-purple-500 mb-2">PLAYER 2</h2>
           
           {/* Selected fighter display */}
-          <Card className="w-48 h-48 bg-arcade-dark border-2 border-arcade-purple mb-4 relative overflow-hidden">
+          <Card className="w-48 h-48 bg-arcade-dark border-2 border-purple-500 mb-4 relative overflow-hidden">
             {p2Selected ? (
               <div className="flex flex-col items-center h-full">
                 <img 
@@ -181,10 +209,10 @@ const CharacterSelect = () => {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="font-pixel text-arcade-purple text-center">SELECT<br/>FIGHTER</p>
+                <p className="font-pixel text-purple-500 text-center">SELECT<br/>FIGHTER</p>
               </div>
             )}
-            <div className="absolute top-0 right-0 bg-arcade-purple text-black font-pixel text-xs px-2 py-1">
+            <div className="absolute top-0 right-0 bg-purple-500 text-black font-pixel text-xs px-2 py-1">
               P2
             </div>
           </Card>
@@ -199,11 +227,17 @@ const CharacterSelect = () => {
             </Button>
             
             <Card 
-              onClick={() => setP2Fighter(fighters[p2Index].id)}
+              onClick={() => {
+                setP2Fighter(fighters[p2Index].id);
+                toast({
+                  title: "Player 2 Selected",
+                  description: `${fighters[p2Index].name} selected as Player 2`,
+                });
+              }}
               className={`w-20 h-20 bg-arcade-dark border-2 cursor-pointer transition-all duration-300 ${
                 p2Fighter === fighters[p2Index].id 
                   ? "border-arcade-neon shadow-[0_0_10px_#39FF14]" 
-                  : "border-arcade-purple hover:border-arcade-neon"
+                  : "border-purple-500 hover:border-arcade-neon"
               }`}
             >
               <img 
@@ -241,7 +275,13 @@ const CharacterSelect = () => {
           {stages.map((stage, index) => (
             <Card 
               key={stage.id}
-              onClick={() => setSelectedStage(stage.id)}
+              onClick={() => {
+                setSelectedStage(stage.id);
+                toast({
+                  title: "Stage Selected",
+                  description: `${stage.name} selected as fighting stage`,
+                });
+              }}
               className={`w-36 h-24 bg-arcade-dark border-2 cursor-pointer transition-all duration-300 ${
                 stageIndex === index ? "scale-110" : "scale-100"
               } ${
@@ -270,6 +310,24 @@ const CharacterSelect = () => {
           </Button>
         </div>
         <p className="font-pixel text-xs text-arcade-blue">(USE &lt;/&gt; KEYS + / TO SELECT)</p>
+      </div>
+      
+      {/* Selection Status */}
+      <div className="relative z-10 w-full text-center mb-4">
+        <div className="flex justify-center gap-4">
+          <div className={`px-3 py-1 rounded font-pixel ${p1Fighter ? "bg-green-500" : "bg-red-500"}`}>
+            {p1Fighter ? "P1 ✓" : "P1 ✗"}
+          </div>
+          <div className={`px-3 py-1 rounded font-pixel ${p2Fighter ? "bg-green-500" : "bg-red-500"}`}>
+            {p2Fighter ? "P2 ✓" : "P2 ✗"}
+          </div>
+          <div className={`px-3 py-1 rounded font-pixel ${selectedStage ? "bg-green-500" : "bg-red-500"}`}>
+            {selectedStage ? "Stage ✓" : "Stage ✗"}
+          </div>
+        </div>
+        <p className="font-pixel text-white text-xs mt-2">
+          {allSelected ? "Press ENTER to start the fight!" : "Select all options to continue"}
+        </p>
       </div>
       
       {/* Bottom Buttons */}
