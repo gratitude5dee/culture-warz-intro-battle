@@ -1,3 +1,4 @@
+
 import React, { useEffect, useReducer, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
@@ -10,7 +11,7 @@ import DebugInfo from "@/components/DebugInfo";
 import PauseMenu from "@/components/PauseMenu";
 import { useGameInput } from "@/hooks/useGameInput";
 import { gameReducer, initialGameState } from "@/reducers/gameReducer";
-import { handleInputP1, handleInputP2, checkCollisions } from "@/utils/gameEngine";
+import { handlePlayerIntents, checkCollisions } from "@/utils/gameEngine";
 import { stageBgs, STAGE_HEIGHT, characterNames } from "@/types/gameTypes";
 
 // Define the types for our location state
@@ -46,7 +47,7 @@ const Fight = () => {
   } = gameState;
   
   // Setup keyboard input handling
-  const { p1Keys, p2Keys } = useGameInput(matchOver, isPaused, player1State, player2State, dispatch);
+  const { p1Keys, p2Keys, processInputs } = useGameInput(matchOver, isPaused, player1State, player2State, dispatch);
   
   // Game loop
   const gameTick = (time: number) => {
@@ -54,9 +55,11 @@ const Fight = () => {
       const deltaTime = (time - previousTimeRef.current) / 1000; // Convert to seconds
       
       if (!isPaused && !matchOver) {
-        // Handle input based on current key states
-        handleInputP1(p1Keys, gameState, dispatch);
-        handleInputP2(p2Keys, gameState, dispatch);
+        // Process inputs and update player intents
+        processInputs();
+        
+        // Handle intent-based movement and actions
+        handlePlayerIntents(gameState, dispatch);
         
         // Update physics - Apply gravity, update positions
         dispatch({ type: 'UPDATE_POSITION', deltaTime });

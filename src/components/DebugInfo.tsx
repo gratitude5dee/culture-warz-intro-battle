@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { GameState, characterStats } from '@/types/gameTypes';
+import { GameState, characterStats, movesData } from '@/types/gameTypes';
 
 interface DebugInfoProps {
   gameState: GameState;
@@ -10,7 +10,8 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
   const { 
     player1State, player1Pos, player1Health, player1Velocity, player1Intent,
     player2State, player2Pos, player2Health, player2Velocity, player2Intent,
-    gameTimer, isPaused
+    player1MoveData, player2MoveData, player1MoveFrame, player2MoveFrame,
+    gameTimer, isPaused, activeHitboxesP1, activeHitboxesP2
   } = gameState;
   
   return (
@@ -32,6 +33,19 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
             <div>Attack: {player1Intent.attackIntent || 'none'}</div>
             <div>Block: {player1Intent.blockIntent ? 'yes' : 'no'}</div>
           </div>
+          {player1MoveData && (
+            <div className="mt-1 text-yellow-300">
+              <div>Current Move: {player1MoveData.name}</div>
+              <div>Frame: {player1MoveFrame} / {player1MoveData.totalFrames}</div>
+              <div>Active: {player1MoveFrame && player1MoveFrame >= player1MoveData.startupFrames && 
+                         player1MoveFrame < player1MoveData.startupFrames + player1MoveData.activeFrames ? 'YES' : 'no'}</div>
+            </div>
+          )}
+          {activeHitboxesP1.length > 0 && (
+            <div className="mt-1 text-red-300">
+              <div>Active Hitboxes: {activeHitboxesP1.length}</div>
+            </div>
+          )}
         </div>
         
         <div>
@@ -46,6 +60,19 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
             <div>Attack: {player2Intent.attackIntent || 'none'}</div>
             <div>Block: {player2Intent.blockIntent ? 'yes' : 'no'}</div>
           </div>
+          {player2MoveData && (
+            <div className="mt-1 text-yellow-300">
+              <div>Current Move: {player2MoveData.name}</div>
+              <div>Frame: {player2MoveFrame} / {player2MoveData.totalFrames}</div>
+              <div>Active: {player2MoveFrame && player2MoveFrame >= player2MoveData.startupFrames && 
+                         player2MoveFrame < player2MoveData.startupFrames + player2MoveData.activeFrames ? 'YES' : 'no'}</div>
+            </div>
+          )}
+          {activeHitboxesP2.length > 0 && (
+            <div className="mt-1 text-red-300">
+              <div>Active Hitboxes: {activeHitboxesP2.length}</div>
+            </div>
+          )}
         </div>
       </div>
       

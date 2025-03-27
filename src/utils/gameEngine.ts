@@ -1,3 +1,4 @@
+
 import { 
   GameState, 
   GameAction, 
@@ -95,44 +96,142 @@ export const checkCollisions = (
 ) => {
   const { activeHitboxesP1, activeHitboxesP2, player1Pos, player2Pos, player1State, player2State } = gameState;
   
+  let p1WasHit = false;
+  let p2WasHit = false;
+  
   // Check P1 hitboxes against P2
   activeHitboxesP1.forEach(hitbox => {
+    // Convert hitbox to world coordinates
+    const worldHitbox = {
+      x: player1Pos.x + hitbox.x,
+      y: player1Pos.y + hitbox.y,
+      width: hitbox.width,
+      height: hitbox.height
+    };
+    
+    // Get P2 hurtbox (simplified as the character box for now)
+    const p2Hurtbox = {
+      x: player2Pos.x,
+      y: player2Pos.y,
+      width: PLAYER_WIDTH,
+      height: PLAYER_HEIGHT
+    };
+    
+    // Check if P2 is blocking
+    const isBlocking = player2State === 'blocking';
+    
     // Simple AABB collision check
-    if (
-      player2State !== 'blocking' &&
-      hitbox.x < player2Pos.x + PLAYER_WIDTH &&
-      hitbox.x + hitbox.width > player2Pos.x &&
-      hitbox.y < player2Pos.y + PLAYER_HEIGHT &&
-      hitbox.y + hitbox.height > player2Pos.y
-    ) {
-      applyDamage('P2', hitbox.damage, dispatch);
+    if (rectOverlap(worldHitbox, p2Hurtbox) && !isBlocking) {
+      applyDamage('P2', hitbox.damage, hitbox.hitstun || 500, hitbox.knockback, dispatch);
+      p2WasHit = true;
+    } else if (rectOverlap(worldHitbox, p2Hurtbox) && isBlocking) {
+      // Reduce damage when blocking
+      applyDamage('P2', Math.floor(hitbox.damage * 0.25), 
+                  Math.floor((hitbox.hitstun || 250) * 0.5), 
+                  { x: (hitbox.knockback?.x || 0) * 0.3, y: 0 }, 
+                  dispatch);
+      p2WasHit = true;
     }
   });
   
   // Check P2 hitboxes against P1
   activeHitboxesP2.forEach(hitbox => {
-    if (
-      player1State !== 'blocking' &&
-      hitbox.x < player1Pos.x + PLAYER_WIDTH &&
-      hitbox.x + hitbox.width > player1Pos.x &&
-      hitbox.y < player1Pos.y + PLAYER_HEIGHT &&
-      hitbox.y + hitbox.height > player1Pos.y
-    ) {
-      applyDamage('P1', hitbox.damage, dispatch);
+    // Convert hitbox to world coordinates
+    const worldHitbox = {
+      x: player2Pos.x + hitbox.x,
+      y: player2Pos.y + hitbox.y,
+      width: hitbox.width,
+      height: hitbox.height
+    };
+    
+    // Get P1 hurtbox (simplified as the character box for now)
+    const p1Hurtbox = {
+      x: player1Pos.x,
+      y: player1Pos.y,
+      width: PLAYER_WIDTH,
+      height: PLAYER_HEIGHT
+    };
+    
+    // Check if P1 is blocking
+    const isBlocking = player1State === 'blocking';
+    
+    // Simple AABB collision check
+    if (rectOverlap(worldHitbox, p1Hurtbox) && !isBlocking) {
+      applyDamage('P1', hitbox.damage, hitbox.hitstun || 500, hitbox.knockback, dispatch);
+      p1WasHit = true;
+    } else if (rectOverlap(worldHitbox, p1Hurtbox) && isBlocking) {
+      // Reduce damage when blocking
+      applyDamage('P1', Math.floor(hitbox.damage * 0.25), 
+                  Math.floor((hitbox.hitstun || 250) * 0.5), 
+                  { x: (hitbox.knockback?.x || 0) * 0.3, y: 0 }, 
+                  dispatch);
+      p1WasHit = true;
     }
   });
+  
+  return { p1Hit: p1WasHit, p2Hit: p2WasHit };
+};
+
+// Helper function to check if two rectangles overlap
+const rectOverlap = (rect1: { x: number, y: number, width: number, height: number },
+                    rect2: { x: number, y: number, width: number, height: number }): boolean => {
+  return (
+    rect1.x < rect2.x + rect2.width &&
+    rect1.x + rect1.width > rect2.x &&
+    rect1.y < rect2.y + rect2.height &&
+    rect1.y + rect1.height > rect2.y
+  );
 };
 
 // Apply damage to a player
 export const applyDamage = (
   player: 'P1' | 'P2',
   damage: number,
+  hitstun: number,
+  knockback: { x: number, y: number } | undefined,
   dispatch: React.Dispatch<GameAction>
 ) => {
+  // Apply damage
   dispatch({ type: 'APPLY_DAMAGE', player, damage });
+  
+  // Apply knockback if specified
+  if (knockback) {
+    const velocity = { 
+      x: player === 'P1' ? -Math.abs(knockback.x) : Math.abs(knockback.x), 
+      y: knockback.y 
+    };
+    dispatch({ type: 'MOVE_PLAYER', player, velocity });
+  }
+  
+  // Set player to hit state
+  dispatch({ type: 'SET_PLAYER_STATE', player, state: damage > 10 ? 'knockedDown' : 'hit' });
   
   // After hit stun, return to idle
   setTimeout(() => {
     dispatch({ type: 'SET_PLAYER_STATE', player, state: 'idle' });
-  }, damage > 10 ? 1000 : 500);
+  }, hitstun);
+};
+
+// Calculate world position for a hitbox based on player position and facing direction
+export const calculateWorldBox = (
+  box: { x: number, y: number, width: number, height: number },
+  playerPos: { x: number, y: number },
+  facingRight: boolean
+) => {
+  if (facingRight) {
+    return {
+      x: playerPos.x + box.x,
+      y: playerPos.y + box.y,
+      width: box.width,
+      height: box.height
+    };
+  } else {
+    // Flip X coordinates if facing left
+    return {
+      x: playerPos.x + PLAYER_WIDTH - box.x - box.width,
+      y: playerPos.y + box.y,
+      width: box.width,
+      height: box.height
+    };
+  }
 };

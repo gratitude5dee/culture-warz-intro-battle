@@ -25,14 +25,37 @@ export type PlayerState =
   | 'hitStunCrouch'
   | 'gettingUp';
 
-// Define hitbox type
+// Define hitbox type with enhanced properties
 export interface Hitbox {
-  x: number;
-  y: number;
+  x: number;         // Offset X from player position
+  y: number;         // Offset Y from player position
   width: number;
   height: number;
   damage: number;
   type: 'light' | 'medium' | 'heavy' | 'special';
+  hitstun?: number;  // Duration in ms opponent is stunned
+  knockback?: { x: number; y: number }; // Velocity applied to opponent on hit
+  priority?: number; // Higher priority attacks beat lower ones
+}
+
+// Define hurtbox type (similar to hitbox but without damage properties)
+export interface Hurtbox {
+  x: number;       // Offset X from player position
+  y: number;       // Offset Y from player position
+  width: number;
+  height: number;
+}
+
+// Define move data structure
+export interface MoveData {
+  name: string;             // e.g., "Light Punch"
+  startupFrames: number;    // Frames before attack becomes active
+  activeFrames: number;     // Frames the attack hitbox is active
+  recoveryFrames: number;   // Frames after attack before next action
+  totalFrames: number;      // startup + active + recovery
+  hitboxes: Hitbox[];       // Can have multiple hitboxes active at different times
+  cancelsInto?: string[];   // List of moves this can cancel into
+  specialCancelable?: boolean; // Whether this move can cancel into specials
 }
 
 // Define position and velocity types
@@ -66,9 +89,12 @@ export interface PlayerData {
   state: PlayerState;
   isFacingRight: boolean;
   activeHitboxes: Hitbox[];
+  currentMove?: MoveData | null;
+  moveFrameCounter?: number;
+  activeHitboxIds?: number[];
 }
 
-// Define action intents - NEW
+// Define action intents
 export interface PlayerIntent {
   moveDirection: 'left' | 'right' | 'none';
   verticalIntent: 'jump' | 'crouch' | 'none';
@@ -76,7 +102,7 @@ export interface PlayerIntent {
   blockIntent: boolean;
 }
 
-// Mapping keys to logical inputs - NEW
+// Mapping keys to logical inputs
 export const P1_INPUT_MAP: Record<string, string> = {
   'w': 'up',
   's': 'down',
@@ -117,8 +143,12 @@ export interface GameState {
   winner: "P1" | "P2" | "Draw" | null;
   player1Data?: PlayerData;
   player2Data?: PlayerData;
-  player1Intent: PlayerIntent; // NEW
-  player2Intent: PlayerIntent; // NEW
+  player1Intent: PlayerIntent;
+  player2Intent: PlayerIntent;
+  player1MoveData?: MoveData | null;
+  player2MoveData?: MoveData | null;
+  player1MoveFrame?: number;
+  player2MoveFrame?: number;
 }
 
 // Define game action types
@@ -133,7 +163,8 @@ export type GameAction =
   | { type: 'TOGGLE_PAUSE' }
   | { type: 'END_MATCH', winner: "P1" | "P2" | "Draw" }
   | { type: 'RESET_MATCH' }
-  | { type: 'SET_PLAYER_INTENT', player: 'P1' | 'P2', intent: PlayerIntent }; // NEW
+  | { type: 'SET_PLAYER_INTENT', player: 'P1' | 'P2', intent: PlayerIntent }
+  | { type: 'UPDATE_MOVE_FRAME', player: 'P1' | 'P2' };
 
 // Constants for game mechanics
 export const STAGE_WIDTH = 800;
@@ -192,8 +223,141 @@ export const characterStats: Record<string, CharacterStats> = {
   }
 };
 
+// Move data definitions per character
+export const movesData: Record<string, Record<string, MoveData>> = {
+  drake: {
+    lightAttack: {
+      name: "Quick Jab",
+      startupFrames: 3,
+      activeFrames: 2,
+      recoveryFrames: 5,
+      totalFrames: 10,
+      hitboxes: [
+        {
+          x: PLAYER_WIDTH, // In front of the player
+          y: 20, // At shoulder height
+          width: 30,
+          height: 20,
+          damage: 5,
+          type: 'light',
+          hitstun: 200,
+          knockback: { x: 2, y: 0 }
+        }
+      ]
+    },
+    mediumAttack: {
+      name: "Straight Punch",
+      startupFrames: 6,
+      activeFrames: 3,
+      recoveryFrames: 8,
+      totalFrames: 17,
+      hitboxes: [
+        {
+          x: PLAYER_WIDTH,
+          y: 25,
+          width: 40,
+          height: 25,
+          damage: 10,
+          type: 'medium',
+          hitstun: 400,
+          knockback: { x: 4, y: -1 }
+        }
+      ]
+    },
+    heavyAttack: {
+      name: "Power Hook",
+      startupFrames: 10,
+      activeFrames: 5,
+      recoveryFrames: 15,
+      totalFrames: 30,
+      hitboxes: [
+        {
+          x: PLAYER_WIDTH - 10,
+          y: 15,
+          width: 50,
+          height: 30,
+          damage: 15,
+          type: 'heavy',
+          hitstun: 600,
+          knockback: { x: 6, y: -3 }
+        }
+      ]
+    },
+    specialAttack: {
+      name: "Diss Track",
+      startupFrames: 15,
+      activeFrames: 10,
+      recoveryFrames: 20,
+      totalFrames: 45,
+      hitboxes: [
+        {
+          x: PLAYER_WIDTH,
+          y: 10,
+          width: 80,
+          height: 40,
+          damage: 20,
+          type: 'special',
+          hitstun: 800,
+          knockback: { x: 8, y: -5 }
+        }
+      ]
+    }
+  },
+  // Similar move data for other characters would go here
+  // For now, we'll just make them all use the same moves as Drake
+  kendrick: { /* Copy drake's moves for now */ },
+  future: { /* Copy drake's moves for now */ },
+  meg: { /* Copy drake's moves for now */ },
+  nicki: { /* Copy drake's moves for now */ }
+};
+
+// Initialize all character moves to use Drake's moves for now
+for (const character of Object.keys(characterStats)) {
+  if (character !== 'drake' && !movesData[character]) {
+    movesData[character] = { ...movesData.drake };
+  }
+}
+
 export const stageBgs: Record<string, string> = {
   sf: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
   la: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
   nyc: "https://images.unsplash.com/photo-1487252665478-49b61b47f302",
+};
+
+// Helper function to get the correct hurtboxes based on player state
+export const getActiveHurtboxes = (playerData: PlayerData): Hurtbox[] => {
+  // Default standing hurtbox (simplified for now)
+  const defaultHurtbox: Hurtbox = {
+    x: 0,
+    y: 0,
+    width: PLAYER_WIDTH,
+    height: PLAYER_HEIGHT
+  };
+  
+  // Different hurtboxes based on state
+  switch (playerData.state) {
+    case 'crouching':
+      return [
+        {
+          x: 0,
+          y: PLAYER_HEIGHT / 2, // Lower half of the player
+          width: PLAYER_WIDTH,
+          height: PLAYER_HEIGHT / 2
+        }
+      ];
+    case 'jumping':
+    case 'jumpingUp':
+    case 'jumpingForward':
+    case 'jumpingBackward':
+      return [
+        {
+          x: PLAYER_WIDTH * 0.1,
+          y: 0,
+          width: PLAYER_WIDTH * 0.8, // Slightly smaller when jumping
+          height: PLAYER_HEIGHT
+        }
+      ];
+    default:
+      return [defaultHurtbox];
+  }
 };
