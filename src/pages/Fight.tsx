@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Pause, Play } from "lucide-react";
+import EndMenu from "@/components/EndMenu";
 
 // Define the types for our location state
 interface FightState {
@@ -49,28 +49,167 @@ const Fight = () => {
   const [timer, setTimer] = useState(99);
   const [isPaused, setIsPaused] = useState(false);
   
+  // End match state
+  const [matchOver, setMatchOver] = useState(false);
+  const [winner, setWinner] = useState<"P1" | "P2" | "Draw" | null>(null);
+  
   // Setup timer countdown
   useEffect(() => {
-    if (isPaused || timer <= 0) return;
+    if (isPaused || timer <= 0 || matchOver) return;
     
     const interval = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimer((prev) => {
+        if (prev <= 1) {
+          // Game ends when timer reaches 0
+          endMatch();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [timer, isPaused]);
+  }, [timer, isPaused, matchOver]);
   
   // Listen for Escape key to open pause menu
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && !matchOver) {
         setIsPaused((prev) => !prev);
+      }
+      
+      // For testing: Press 'O' to end match
+      if (e.key === "o" && !matchOver && !isPaused) {
+        endMatch();
       }
     };
     
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [matchOver, isPaused]);
+  
+  // Function to determine winner and end the match
+  const endMatch = () => {
+    let matchWinner: "P1" | "P2" | "Draw";
+    
+    if (p1Health > p2Health) {
+      matchWinner = "P1";
+    } else if (p2Health > p1Health) {
+      matchWinner = "P2";
+    } else {
+      matchWinner = "Draw";
+    }
+    
+    setWinner(matchWinner);
+    setMatchOver(true);
+    setIsPaused(false); // Ensure pause menu is closed
+  };
+  
+  // Handle play again / rematch
+  const handlePlayAgain = () => {
+    setP1Health(100);
+    setP2Health(100);
+    setTimer(99);
+    setMatchOver(false);
+    setWinner(null);
+  };
+  
+  if (matchOver && winner) {
+    return (
+      <div 
+        className="relative w-full h-screen overflow-hidden scanlines noise-bg" 
+        style={{
+          backgroundImage: `url(${stageBgs[stage]}?auto=format&fit=crop&w=1920&h=1080)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        {/* Keep the UI visible in the background */}
+        <div className="opacity-50">
+          {/* HUD - Top */}
+          <div className="absolute top-0 left-0 right-0 px-6 py-4 flex justify-between items-center z-20">
+            {/* P1 Health and Info */}
+            <div className="flex items-center gap-3 w-1/3">
+              <Card className="h-16 w-16 bg-arcade-dark/50 border-2 border-arcade-accent overflow-hidden flex items-center justify-center pixel-corners">
+                <img 
+                  src={`https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=80&h=80`} 
+                  alt={characterNames[p1]}
+                  className="w-full h-full object-cover"
+                />
+              </Card>
+              <div className="flex-grow">
+                <p className="font-pixel text-sm text-white mb-1">{characterNames[p1]}</p>
+                <div className="relative">
+                  <Progress 
+                    value={p1Health} 
+                    className="h-6 bg-arcade-dark/50 border-2 border-arcade-accent"
+                  />
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-arcade-neon" 
+                    style={{ width: `${p1Health}%`, transition: "width 0.3s" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Timer */}
+            <div className="font-pixel text-4xl text-white bg-arcade-dark/70 px-6 py-2 border-2 border-arcade-accent">
+              {timer.toString().padStart(2, '0')}
+            </div>
+            
+            {/* P2 Health and Info */}
+            <div className="flex items-center gap-3 w-1/3 flex-row-reverse">
+              <Card className="h-16 w-16 bg-arcade-dark/50 border-2 border-arcade-purple overflow-hidden flex items-center justify-center pixel-corners">
+                <img 
+                  src={`https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=80&h=80`} 
+                  alt={characterNames[p2]}
+                  className="w-full h-full object-cover"
+                />
+              </Card>
+              <div className="flex-grow">
+                <p className="font-pixel text-sm text-white mb-1 text-right">{characterNames[p2]}</p>
+                <div className="relative">
+                  <Progress 
+                    value={p2Health} 
+                    className="h-6 bg-arcade-dark/50 border-2 border-arcade-purple"
+                  />
+                  <div 
+                    className="absolute top-0 right-0 h-full bg-arcade-purple" 
+                    style={{ width: `${p2Health}%`, transition: "width 0.3s" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Character Area - Middle */}
+          <div className="absolute inset-0 flex items-center justify-between px-20 z-10">
+            {/* P1 Character */}
+            <div className="h-64 w-48 bg-arcade-accent/30 border-2 border-arcade-accent relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="font-pixel text-arcade-accent">{characterNames[p1]}</p>
+              </div>
+            </div>
+            
+            {/* P2 Character */}
+            <div className="h-64 w-48 bg-arcade-purple/30 border-2 border-arcade-purple relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="font-pixel text-arcade-purple">{characterNames[p2]}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* End Menu Overlay */}
+        <EndMenu 
+          winner={winner} 
+          onPlayAgain={handlePlayAgain} 
+          p1Name={characterNames[p1]}
+          p2Name={characterNames[p2]}
+        />
+      </div>
+    );
+  }
   
   return (
     <div 
