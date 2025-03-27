@@ -168,6 +168,8 @@ const Fight = () => {
           </SheetTrigger>
           <SheetContent 
             className="w-full max-w-md border-l-2 border-arcade-accent bg-arcade-dark/95 p-0 scanlines"
+            side="right"
+            hideCloseButton={true}
           >
             <div className="flex flex-col items-center justify-center h-full p-6">
               <h2 className="font-pixel text-3xl text-arcade-accent mb-8">PAUSED</h2>
