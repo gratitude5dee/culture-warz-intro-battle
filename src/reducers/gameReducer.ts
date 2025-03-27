@@ -1,3 +1,4 @@
+
 import { 
   GameState, 
   GameAction, 
@@ -106,7 +107,12 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         width: 30,
         height: 20,
         damage: action.attackType === 'light' ? 5 : action.attackType === 'medium' ? 10 : 15,
-        type: action.attackType
+        type: action.attackType,
+        hitstun: action.attackType === 'light' ? 200 : action.attackType === 'medium' ? 400 : 600,
+        knockback: { 
+          x: action.attackType === 'light' ? 2 : action.attackType === 'medium' ? 4 : 6, 
+          y: action.attackType === 'light' ? 0 : action.attackType === 'medium' ? -1 : -3 
+        }
       };
       
       if (action.player === 'P1') {

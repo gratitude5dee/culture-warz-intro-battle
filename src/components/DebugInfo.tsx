@@ -11,13 +11,16 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
     player1State, player1Pos, player1Health, player1Velocity, player1Intent,
     player2State, player2Pos, player2Health, player2Velocity, player2Intent,
     player1MoveData, player2MoveData, player1MoveFrame, player2MoveFrame,
-    gameTimer, isPaused, activeHitboxesP1, activeHitboxesP2
+    gameTimer, isPaused, matchOver, winner, activeHitboxesP1, activeHitboxesP2
   } = gameState;
   
   return (
-    <div className="absolute bottom-4 left-4 bg-black/70 p-2 text-white text-xs font-mono max-h-80 overflow-y-auto">
+    <div className="absolute bottom-4 left-4 bg-black/70 p-2 text-white text-xs font-mono max-h-80 overflow-y-auto w-[500px]">
       <div className="mb-2 border-b border-white/50 pb-1">
-        <span className="text-arcade-accent">Game Status:</span> {isPaused ? 'PAUSED' : 'RUNNING'} | <span>Timer: {Math.ceil(gameTimer)}</span>
+        <span className="text-arcade-accent">Game Status:</span> {isPaused ? 'PAUSED' : 'RUNNING'} | 
+        <span> Timer: {Math.ceil(gameTimer)}</span> |
+        <span> Match Over: {matchOver ? 'YES' : 'no'}</span>
+        {winner && <span> | Winner: {winner}</span>}
       </div>
       
       <div className="grid grid-cols-2 gap-4">
@@ -44,6 +47,11 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
           {activeHitboxesP1.length > 0 && (
             <div className="mt-1 text-red-300">
               <div>Active Hitboxes: {activeHitboxesP1.length}</div>
+              {activeHitboxesP1.map((hitbox, idx) => (
+                <div key={idx} className="text-[10px]">
+                  Hitbox {idx}: Damage={hitbox.damage}, Pos=({Math.round(hitbox.x)},{Math.round(hitbox.y)})
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -71,6 +79,11 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
           {activeHitboxesP2.length > 0 && (
             <div className="mt-1 text-red-300">
               <div>Active Hitboxes: {activeHitboxesP2.length}</div>
+              {activeHitboxesP2.map((hitbox, idx) => (
+                <div key={idx} className="text-[10px]">
+                  Hitbox {idx}: Damage={hitbox.damage}, Pos=({Math.round(hitbox.x)},{Math.round(hitbox.y)})
+                </div>
+              ))}
             </div>
           )}
         </div>
