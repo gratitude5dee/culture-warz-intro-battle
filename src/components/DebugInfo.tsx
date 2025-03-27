@@ -8,8 +8,8 @@ interface DebugInfoProps {
 
 const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
   const { 
-    player1State, player1Pos, player1Health, player1Velocity,
-    player2State, player2Pos, player2Health, player2Velocity,
+    player1State, player1Pos, player1Health, player1Velocity, player1Intent,
+    player2State, player2Pos, player2Health, player2Velocity, player2Intent,
     gameTimer, isPaused
   } = gameState;
   
@@ -26,6 +26,12 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
           <div>Position: {Math.round(player1Pos.x)}, {Math.round(player1Pos.y)}</div>
           <div>Velocity: {Math.round(player1Velocity.x)}, {Math.round(player1Velocity.y)}</div>
           <div>Health: {player1Health}</div>
+          <div className="mt-1 text-emerald-300">
+            <div>Move: {player1Intent.moveDirection}</div>
+            <div>Vertical: {player1Intent.verticalIntent}</div>
+            <div>Attack: {player1Intent.attackIntent || 'none'}</div>
+            <div>Block: {player1Intent.blockIntent ? 'yes' : 'no'}</div>
+          </div>
         </div>
         
         <div>
@@ -34,6 +40,12 @@ const DebugInfo: React.FC<DebugInfoProps> = ({ gameState }) => {
           <div>Position: {Math.round(player2Pos.x)}, {Math.round(player2Pos.y)}</div>
           <div>Velocity: {Math.round(player2Velocity.x)}, {Math.round(player2Velocity.y)}</div>
           <div>Health: {player2Health}</div>
+          <div className="mt-1 text-emerald-300">
+            <div>Move: {player2Intent.moveDirection}</div>
+            <div>Vertical: {player2Intent.verticalIntent}</div>
+            <div>Attack: {player2Intent.attackIntent || 'none'}</div>
+            <div>Block: {player2Intent.blockIntent ? 'yes' : 'no'}</div>
+          </div>
         </div>
       </div>
       

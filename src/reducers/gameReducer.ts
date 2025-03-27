@@ -1,5 +1,20 @@
+import { 
+  GameState, 
+  GameAction, 
+  STAGE_WIDTH, 
+  STAGE_HEIGHT, 
+  GRAVITY, 
+  PLAYER_WIDTH, 
+  PLAYER_HEIGHT,
+  PlayerIntent
+} from '@/types/gameTypes';
 
-import { GameState, GameAction, STAGE_WIDTH, STAGE_HEIGHT, GRAVITY, PLAYER_WIDTH, PLAYER_HEIGHT } from '@/types/gameTypes';
+const DEFAULT_INTENT: PlayerIntent = {
+  moveDirection: 'none',
+  verticalIntent: 'none',
+  attackIntent: null,
+  blockIntent: false
+};
 
 // Game state reducer
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -34,6 +49,33 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         y: state.player2Pos.y < STAGE_HEIGHT - PLAYER_HEIGHT ? state.player2Velocity.y + GRAVITY : 0
       };
       
+      // Check if player landed (was in air, now on ground)
+      const wasP1InAir = state.player1Pos.y < STAGE_HEIGHT - PLAYER_HEIGHT;
+      const isP1OnGround = newP1Pos.y >= STAGE_HEIGHT - PLAYER_HEIGHT;
+      if (wasP1InAir && isP1OnGround && state.player1State === 'jumping') {
+        return {
+          ...state,
+          player1Pos: newP1Pos,
+          player2Pos: newP2Pos,
+          player1Velocity: newP1Velocity,
+          player2Velocity: newP2Velocity,
+          player1State: 'idle' // Reset to idle when landing
+        };
+      }
+      
+      const wasP2InAir = state.player2Pos.y < STAGE_HEIGHT - PLAYER_HEIGHT;
+      const isP2OnGround = newP2Pos.y >= STAGE_HEIGHT - PLAYER_HEIGHT;
+      if (wasP2InAir && isP2OnGround && state.player2State === 'jumping') {
+        return {
+          ...state,
+          player1Pos: newP1Pos,
+          player2Pos: newP2Pos,
+          player1Velocity: newP1Velocity,
+          player2Velocity: newP2Velocity,
+          player2State: 'idle' // Reset to idle when landing
+        };
+      }
+      
       return {
         ...state,
         player1Pos: newP1Pos,
@@ -47,6 +89,13 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         return { ...state, player1State: action.state };
       } else {
         return { ...state, player2State: action.state };
+      }
+      
+    case 'SET_PLAYER_INTENT':
+      if (action.player === 'P1') {
+        return { ...state, player1Intent: action.intent };
+      } else {
+        return { ...state, player2Intent: action.intent };
       }
       
     case 'START_ATTACK':
@@ -155,7 +204,9 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         gameTimer: 99,
         isPaused: false,
         matchOver: false,
-        winner: null
+        winner: null,
+        player1Intent: {...DEFAULT_INTENT},
+        player2Intent: {...DEFAULT_INTENT}
       };
       
     default:
@@ -178,5 +229,7 @@ export const initialGameState = (stageHeight: number): GameState => ({
   gameTimer: 99,
   isPaused: false,
   matchOver: false,
-  winner: null
+  winner: null,
+  player1Intent: {...DEFAULT_INTENT},
+  player2Intent: {...DEFAULT_INTENT}
 });

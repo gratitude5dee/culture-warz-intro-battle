@@ -68,6 +68,37 @@ export interface PlayerData {
   activeHitboxes: Hitbox[];
 }
 
+// Define action intents - NEW
+export interface PlayerIntent {
+  moveDirection: 'left' | 'right' | 'none';
+  verticalIntent: 'jump' | 'crouch' | 'none';
+  attackIntent: 'light' | 'medium' | 'heavy' | 'special' | null;
+  blockIntent: boolean;
+}
+
+// Mapping keys to logical inputs - NEW
+export const P1_INPUT_MAP: Record<string, string> = {
+  'w': 'up',
+  's': 'down',
+  'a': 'left',
+  'd': 'right',
+  'u': 'lightAttack',
+  'i': 'mediumAttack',
+  'o': 'heavyAttack',
+  'p': 'specialAttack'
+};
+
+export const P2_INPUT_MAP: Record<string, string> = {
+  'arrowup': 'up',
+  'arrowdown': 'down',
+  'arrowleft': 'left',
+  'arrowright': 'right',
+  '1': 'lightAttack',
+  '2': 'mediumAttack',
+  '3': 'heavyAttack',
+  '4': 'specialAttack'
+};
+
 // Define game state interface
 export interface GameState {
   player1Pos: Vector2D;
@@ -86,6 +117,8 @@ export interface GameState {
   winner: "P1" | "P2" | "Draw" | null;
   player1Data?: PlayerData;
   player2Data?: PlayerData;
+  player1Intent: PlayerIntent; // NEW
+  player2Intent: PlayerIntent; // NEW
 }
 
 // Define game action types
@@ -99,7 +132,8 @@ export type GameAction =
   | { type: 'UPDATE_TIMER', deltaTime: number }
   | { type: 'TOGGLE_PAUSE' }
   | { type: 'END_MATCH', winner: "P1" | "P2" | "Draw" }
-  | { type: 'RESET_MATCH' };
+  | { type: 'RESET_MATCH' }
+  | { type: 'SET_PLAYER_INTENT', player: 'P1' | 'P2', intent: PlayerIntent }; // NEW
 
 // Constants for game mechanics
 export const STAGE_WIDTH = 800;
