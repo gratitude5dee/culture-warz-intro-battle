@@ -1,1 +1,8 @@
+
 project_id = "vfoencnakiqopgdcnetc"
+
+[functions.find-match]
+verify_jwt = true
+
+[functions.process-game-tick]
+verify_jwt = true

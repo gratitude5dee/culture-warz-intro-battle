@@ -1,4 +1,3 @@
-
 import { 
   GameState, 
   GameAction, 
@@ -213,6 +212,28 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         winner: null,
         player1Intent: {...DEFAULT_INTENT},
         player2Intent: {...DEFAULT_INTENT}
+      };
+      
+    case 'APPLY_AUTHORITATIVE_STATE':
+      // This action replaces our local state with the server's authoritative state
+      const authState = action.state;
+      
+      return {
+        ...state,
+        player1Pos: authState.player1Pos,
+        player2Pos: authState.player2Pos,
+        player1Velocity: authState.player1Velocity,
+        player2Velocity: authState.player2Velocity,
+        player1Health: authState.player1Health,
+        player2Health: authState.player2Health,
+        player1State: authState.player1State,
+        player2State: authState.player2State,
+        gameTimer: authState.gameTimer,
+        matchOver: authState.matchOver,
+        winner: authState.winner,
+        // Don't override local intents, but keep server's input sequence numbers
+        // player1Intent: state.player1Intent,
+        // player2Intent: state.player2Intent
       };
       
     default:

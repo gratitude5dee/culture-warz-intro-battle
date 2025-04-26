@@ -1,4 +1,3 @@
-
 // Define player state types
 export type PlayerState = 
   | 'idle' 
@@ -164,7 +163,8 @@ export type GameAction =
   | { type: 'END_MATCH', winner: "P1" | "P2" | "Draw" }
   | { type: 'RESET_MATCH' }
   | { type: 'SET_PLAYER_INTENT', player: 'P1' | 'P2', intent: PlayerIntent }
-  | { type: 'UPDATE_MOVE_FRAME', player: 'P1' | 'P2' };
+  | { type: 'UPDATE_MOVE_FRAME', player: 'P1' | 'P2' }
+  | { type: 'APPLY_AUTHORITATIVE_STATE', state: any }; // We use 'any' here as the state structure can evolve
 
 // Constants for game mechanics
 export const STAGE_WIDTH = 800;

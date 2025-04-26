@@ -2,9 +2,12 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Menu = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     // Log that we've reached the menu page
@@ -19,8 +22,15 @@ const Menu = () => {
     navigate("/settings");
   };
 
-  const handleExit = () => {
+  const handleExit = async () => {
+    if (user) {
+      await signOut();
+    }
     navigate("/");
+  };
+
+  const handleLogin = () => {
+    navigate("/auth");
   };
 
   return (
@@ -40,6 +50,17 @@ const Menu = () => {
           <p className="font-pixel text-arcade-blue text-sm sm:text-base md:text-xl">
             HIP HOP STREET FIGHTER
           </p>
+          
+          {/* User status */}
+          {user ? (
+            <p className="font-pixel text-green-500 text-xs mt-2">
+              ONLINE: {user.email}
+            </p>
+          ) : (
+            <p className="font-pixel text-arcade-accent text-xs mt-2">
+              OFFLINE: LOG IN TO PLAY ONLINE
+            </p>
+          )}
         </div>
         
         {/* Menu Options */}
@@ -48,7 +69,7 @@ const Menu = () => {
             onClick={handleStartGame}
             className="font-pixel w-full text-white bg-arcade-accent/20 border-2 border-arcade-accent py-6 hover:bg-arcade-accent/40 transition-all duration-300 h-auto"
           >
-            START GAME
+            {user ? "PLAY ONLINE" : "PRACTICE MODE"}
           </Button>
           
           <Button 
@@ -58,12 +79,21 @@ const Menu = () => {
             SETTINGS
           </Button>
           
-          <Button 
-            onClick={handleExit}
-            className="font-pixel w-full text-white bg-arcade-blue/20 border-2 border-arcade-blue py-6 hover:bg-arcade-blue/40 transition-all duration-300 h-auto"
-          >
-            EXIT
-          </Button>
+          {user ? (
+            <Button 
+              onClick={handleExit}
+              className="font-pixel w-full text-white bg-arcade-blue/20 border-2 border-arcade-blue py-6 hover:bg-arcade-blue/40 transition-all duration-300 h-auto"
+            >
+              LOGOUT
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleLogin}
+              className="font-pixel w-full text-white bg-arcade-blue/20 border-2 border-arcade-blue py-6 hover:bg-arcade-blue/40 transition-all duration-300 h-auto"
+            >
+              LOGIN / SIGNUP
+            </Button>
+          )}
         </div>
       </div>
       
