@@ -9,7 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      matches: {
+        Row: {
+          created_at: string
+          current_state: Json | null
+          id: string
+          p1_character: string
+          p2_character: string
+          player1_id: string | null
+          player2_id: string | null
+          stage: string
+          status: string
+          updated_at: string
+          winner: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_state?: Json | null
+          id?: string
+          p1_character: string
+          p2_character: string
+          player1_id?: string | null
+          player2_id?: string | null
+          stage: string
+          status?: string
+          updated_at?: string
+          winner?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_state?: Json | null
+          id?: string
+          p1_character?: string
+          p2_character?: string
+          player1_id?: string | null
+          player2_id?: string | null
+          stage?: string
+          status?: string
+          updated_at?: string
+          winner?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_player1_id_fkey"
+            columns: ["player1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_player2_id_fkey"
+            columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_winner_fkey"
+            columns: ["winner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          status: string | null
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          status?: string | null
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      queue: {
+        Row: {
+          character: string
+          id: string
+          joined_at: string
+          stage: string
+          user_id: string | null
+        }
+        Insert: {
+          character: string
+          id?: string
+          joined_at?: string
+          stage: string
+          user_id?: string | null
+        }
+        Update: {
+          character?: string
+          id?: string
+          joined_at?: string
+          stage?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
