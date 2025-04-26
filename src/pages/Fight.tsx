@@ -1,3 +1,4 @@
+
 import React, { useEffect, useReducer, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
@@ -74,6 +75,7 @@ const Fight = () => {
     
     const getMatchDetails = async () => {
       try {
+        // Fixed query with proper column hints for relationships
         const { data: match } = await supabase
           .from('matches')
           .select('*, player1:player1_id(username), player2:player2_id(username)')
@@ -81,9 +83,9 @@ const Fight = () => {
           .single();
           
         if (match) {
-          const opponentId = isPlayer1 ? match.player2_id : match.player1_id;
-          const playerNum = isPlayer1 ? 'player2' : 'player1';
-          setOpponentName(match[playerNum]?.username || "Opponent");
+          // Properly access the username from the related profile
+          const opponentProfile = isPlayer1 ? match.player2 : match.player1;
+          setOpponentName(opponentProfile?.username || "Opponent");
           
           // Initialize with match state if available
           if (match.current_state) {
