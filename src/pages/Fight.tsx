@@ -1,4 +1,3 @@
-
 import React, { useEffect, useReducer, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
@@ -24,6 +23,19 @@ interface FightState {
   p2: string;
   stage: string;
   isPlayer1: boolean;
+}
+
+// Define the match type with proper relationship structures
+interface MatchWithProfiles {
+  id: string;
+  current_state: any;
+  player1: {
+    username: string;
+  } | null;
+  player2: {
+    username: string;
+  } | null;
+  // Add other match fields as needed
 }
 
 const Fight = () => {
@@ -76,15 +88,21 @@ const Fight = () => {
     const getMatchDetails = async () => {
       try {
         // Fixed query with proper column hints for relationships
-        const { data: match } = await supabase
+        const { data: match, error } = await supabase
           .from('matches')
           .select('*, player1:player1_id(username), player2:player2_id(username)')
           .eq('id', matchId)
           .single();
           
+        if (error) {
+          console.error("Error fetching match details:", error);
+          return;
+        }
+          
         if (match) {
-          // Properly access the username from the related profile
-          const opponentProfile = isPlayer1 ? match.player2 : match.player1;
+          // Properly access the username from the related profile with type assertion
+          const typedMatch = match as unknown as MatchWithProfiles;
+          const opponentProfile = isPlayer1 ? typedMatch.player2 : typedMatch.player1;
           setOpponentName(opponentProfile?.username || "Opponent");
           
           // Initialize with match state if available
